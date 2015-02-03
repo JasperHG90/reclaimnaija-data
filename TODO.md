@@ -1,6 +1,12 @@
 # TO DO!
 
-- Need to add a license before making repository public! (if done)
+* Low priority:
+	
+	- Need to add a license before making repository public! (when done)
+
+* Direct priority:
+
+	- Finish up the scraper
 
 ## Python:
 
@@ -21,4 +27,6 @@
 
 	1. Take location as offered by the individual complaints
 	2. Strip location from text if mentioned
-	3). Set up TOMCAT server to geolocate!
+	3. Set up CLIFF-up virtual box to geolocate!
+
+		- Downloaded the virtual machine. When data is updated, will try it out.
