@@ -1,5 +1,7 @@
 # TO DO!
 
+- DEADLINE FOR SCRIPT: 13-02-2015
+
 * Low priority:
 	
 	- Need to add a license before making repository public! (when done)
