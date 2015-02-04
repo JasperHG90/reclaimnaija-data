@@ -1,9 +1,9 @@
 '''
 This script scrapes information about harrassment at the Nigerian 2011 & 2015 elections from www.reclamnaija.com 
-Written by : Jasper Ginn
+Written by : Jasper Ginn | Johanna Renz
 Date : 25-01-2015
 Last modified : 04-02-2015
-Please send suggestions/comments to : Jasperginn@hotmail.com | <Jhanna's email>
+Please send suggestions/comments to : Jasperginn@hotmail.com | Johannarenz@hotmail.de
 
 STILL TO IMPLEMENT:
     (1) range for scraping - possibly date, years etc. (low priority)
