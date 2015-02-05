@@ -34,6 +34,10 @@ import requests
 import sqlite3 as lite
 
 '''
++++ MAIN FUNCTIONS +++
+'''
+
+'''
 FUNCTION 1 : create the URLs for the scraper
     Parameters : 
         lower_range : integer
@@ -70,67 +74,7 @@ def dbSetup(dbname, tablename, path = '/home/vagrant/Documents/'):
     con.commit()
 
 '''
-FUNCTION 3 : Insert results form each page to the database
-    Parameters :
-        values_list : list 
-            list of values to send to the database
-        dbname      : string
-            name of the database
-        tablename   : string
-            name of the table in which to store results
-        path        : string
-            path to the database. Defaults to '/home/vagrant/Documents/'
-'''
-
-def dbInsert(values_list, dbname, tablename , path = '/home/vagrant/Documents/'):
-    os.chdir(path)
-    con = lite.connect(dbname + '.db') 
-    try:
-        with con:  
-            # Cursor file
-            cur = con.cursor()
-            # Write values to db
-            cur.executemany("INSERT INTO {} VALUES(?, ?, ?, ?, ?, ?, ?, ?)".format(tablename), values_list)
-            # Commit (i.e. save) changes
-            con.commit()
-            # Close connection
-            con.close()
-    except:
-        print "SQL: There was a problem while inserting the values into the SQLite database. Check the traceback for errors . . ."
-        
-'''
-FUNCTION 4 : Set up the logger file
-    Parameters :
-        logname : string
-            name of the log file
-'''
-
-def naijaLogging(logname):
-    log_dir =  logname + '.log'
-    log_level = 'info'
-
-    logger = logging.getLogger(logname)
-
-    if log_level == 'info':
-        logger.setLevel(logging.INFO)
-    elif log_level == 'warning':
-        logger.setLevel(logging.WARNING)
-    elif log_level == 'error':
-        logger.setlevel(logging.ERROR)
-    elif log_level == 'debug':
-        logger.setlevel(logging.DEBUG)
-
-    if log_dir:
-        fh = logging.FileHandler(log_dir, 'a')
-    else:
-        fh = logging.FileHandler( logname + '.log', 'a')
-    formatter = logging.Formatter('%(levelname)s; %(asctime)s; %(message)s')
-    fh.setFormatter(formatter)
-
-    logger.addHandler(fh)
-    
-'''
-FUNCTION 5 : function that captures the index of all urls on each page
+FUNCTION 3 : function that captures the index of all urls on each page
     parameters : 
         url  :  string
             url of the index page.
@@ -159,25 +103,7 @@ def naijaIndex(url):
         print "INDEX (3): There was an error while loading the page for url {}. Check the traceback for errors.".format(url)
 
 '''
-FUNCTION 6 : Helper function to retrieve longitude and latitude 
-    parameters :
-        soup_object  :  A BeautifulSoup instance
-            Soup object from the report url
-'''
-
-def naijaLocs(soup_object):
-    try:
-        # Found the Lon/Lat combination. Not pretty, but oh well . . . 
-        lonlat = re.findall('var myPoint = new OpenLayers.LonLat[(\d)., ]*', string = soup_object.text)[0].strip('var myPoint = new OpenLayers.LonLat')
-        lon = lonlat.split(',')[0].strip('( ')
-        lat = lonlat.split(',')[1].strip(' )')
-        return(float(lon), float(lat))
-    except:
-        print 'LOCATION: there was an error retrieving the location. Check the log for issues . . . '
-        return("", "")
-        
-'''
-FUNCTION 6 : Function that scrapes results from each individual page and stores it in the database
+FUNCTION 4 : Function that scrapes results from each individual page and stores it in the database
     parameters : 
         url  :  string
             url pointing towards the individual report
@@ -236,5 +162,86 @@ def naijaReport(url):
              ver ]
     # Return
     return(vals)
+
+'''
++++ HELPER FUNCTIONS +++
+'''
+
+'''
+FUNCTION 5 : Insert results form each page to the database
+    Parameters :
+        values_list : list 
+            list of values to send to the database
+        dbname      : string
+            name of the database
+        tablename   : string
+            name of the table in which to store results
+        path        : string
+            path to the database. Defaults to '/home/vagrant/Documents/'
+'''
+
+def dbInsert(values_list, dbname, tablename , path = '/home/vagrant/Documents/'):
+    os.chdir(path)
+    con = lite.connect(dbname + '.db') 
+    try:
+        with con:  
+            # Cursor file
+            cur = con.cursor()
+            # Write values to db
+            cur.executemany("INSERT INTO {} VALUES(?, ?, ?, ?, ?, ?, ?, ?)".format(tablename), values_list)
+            # Commit (i.e. save) changes
+            con.commit()
+            # Close connection
+            con.close()
+    except:
+        print "SQL: There was a problem while inserting the values into the SQLite database. Check the traceback for errors . . ."
+        
+'''
+FUNCTION 6 : Set up the logger file
+    Parameters :
+        logname : string
+            name of the log file
+'''
+
+def naijaLogging(logname):
+    log_dir =  logname + '.log'
+    log_level = 'info'
+
+    logger = logging.getLogger(logname)
+
+    if log_level == 'info':
+        logger.setLevel(logging.INFO)
+    elif log_level == 'warning':
+        logger.setLevel(logging.WARNING)
+    elif log_level == 'error':
+        logger.setlevel(logging.ERROR)
+    elif log_level == 'debug':
+        logger.setlevel(logging.DEBUG)
+
+    if log_dir:
+        fh = logging.FileHandler(log_dir, 'a')
+    else:
+        fh = logging.FileHandler( logname + '.log', 'a')
+    formatter = logging.Formatter('%(levelname)s; %(asctime)s; %(message)s')
+    fh.setFormatter(formatter)
+
+    logger.addHandler(fh)
+
+'''
+FUNCTION 7 : Helper function to retrieve longitude and latitude 
+    parameters :
+        soup_object  :  A BeautifulSoup instance
+            Soup object from the report url
+'''
+
+def naijaLocs(soup_object):
+    try:
+        # Found the Lon/Lat combination. Not pretty, but oh well . . . 
+        lonlat = re.findall('var myPoint = new OpenLayers.LonLat[(\d)., ]*', string = soup_object.text)[0].strip('var myPoint = new OpenLayers.LonLat')
+        lon = lonlat.split(',')[0].strip('( ')
+        lat = lonlat.split(',')[1].strip(' )')
+        return(float(lon), float(lat))
+    except:
+        print 'LOCATION: there was an error retrieving the location. Check the log for issues . . . '
+        return("", "")
     
- 
