@@ -329,7 +329,6 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
             logger.error("INDEX: There was an error while extracting the urls for the individual pages from url {}.".format(url))
         # For each indexed url, do . . . 
         for url in indUrls:
-            print w
             # Check if URL already in database
             res = naijadbCheck(url, dbname, tablename, path = path)
             if res != None and override == "FALSE":
@@ -345,4 +344,4 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
 +++ RUN MAIN +++
 '''
 
-main(1, 20, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'TRUE')
+main(1, 200, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'TRUE')

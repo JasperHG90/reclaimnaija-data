@@ -28,6 +28,8 @@ db<-dbConnect(SQLite(), dbname=paste("NAIJA_sec.db",
 # Read complete dataset
 data <- dbReadTable(db, "NAIJA_tab")
 
+unique(data)
+
 # Read only data from a certain period
 data <- dbSendQuery(db, "SELECT * FROM NAIJA WHERE Date = '2014-08-09'")
 # Fetch data
