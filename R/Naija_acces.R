@@ -3,7 +3,7 @@
 ### Prep
 rm(list=ls())
 # Set wd
-setwd("/Users/Jasper/Documents/Private/")
+setwd("/Users/Jasper/Documents/github.projects/reclaimnaija/data/")
 # Run this function! It will install packages you need but might not have :)
 Nespack <- function(){ 
   list.of.packages <- c("ggplot2","dplyr", "RSQLite", "lubridate")
@@ -20,13 +20,13 @@ Nespack()
 require(ggplot2) ; require(dplyr) ; require(RSQLite) ; require(lubridate)
 
 # Connect to SQLite db! (make sure it is in your working directory)
-db<-dbConnect(SQLite(), dbname=paste("Naija.db",
+db<-dbConnect(SQLite(), dbname=paste("NAIJA_sec.db",
                                      sep=""))
 
 #### READING DATA FROM DB
 
 # Read complete dataset
-data <- dbReadTable(db, "NAIJA")
+data <- dbReadTable(db, "NAIJA_tab")
 
 # Read only data from a certain period
 data <- dbSendQuery(db, "SELECT * FROM NAIJA WHERE Date = '2014-08-09'")
@@ -37,6 +37,9 @@ data <- dbFetch(data)
 data <- dbSendQuery(db, "SELECT Date FROM NAIJA")
 # Fetch data
 data <- dbFetch(data)
+
+# Close connection
+dbDisconnect(db)
 
 #### Plotting
 
