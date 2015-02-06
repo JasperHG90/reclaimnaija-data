@@ -3,7 +3,7 @@
 This script scrapes information about harrassment at the Nigerian 2011 & 2015 elections from www.reclamnaija.com 
 Written by : Jasper Ginn & Johanna Renz
 Date : 25-01-2015
-Last modified : 04-02-2015
+Last modified : 07-02-2015
 Please send suggestions/comments to : Jasperginn@hotmail.com | Johannarenz@hotmail.de
 
 '''
@@ -185,8 +185,7 @@ def naijadbInsert(values_list, dbname, tablename , path = '~/desktop/'):
             # Commit (i.e. save) changes
             con.commit()
         # Close connection
-        con.close()
-            
+        con.close()           
     except:
         print 'Error while setting up the database. Quitting the script now . . . '
         
@@ -269,7 +268,7 @@ def naijaPathmaker(dbname, path):
         return(path + '/' + dbname + '.db')
 
 '''
-+++ RUN +++
++++ MAIN +++
 '''
 
 def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", override = 'FALSE'):
@@ -278,11 +277,12 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
     Set up logger
     '''
     
+    # Log name
     log_dir = 'NAIJA.log'
     log_level = 'info'
-
+    # Start logging
     logger = logging.getLogger('NAIJA')
-
+    # Set levels
     if log_level == 'info':
         logger.setLevel(logging.INFO)
     elif log_level == 'warning':
@@ -291,7 +291,7 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
         logger.setlevel(logging.ERROR)
     elif log_level == 'debug':
         logger.setlevel(logging.DEBUG)
-
+    # Go
     if log_dir:
         fh = logging.FileHandler(log_dir, 'a')
     else:
@@ -344,4 +344,4 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
 +++ RUN MAIN +++
 '''
 
-main(1, 200, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'TRUE')
+main(1, 200, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'FALSE')
