@@ -341,7 +341,7 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
                     logger.error('DETAILS: There occurred an error while scraping the details for url {}.'.format(url))
 
 '''
-+++ RUN MAIN +++
+++++ RUN MAIN ++++
 '''
 
 main(1, 200, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'FALSE')
