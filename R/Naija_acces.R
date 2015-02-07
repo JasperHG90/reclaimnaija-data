@@ -70,6 +70,7 @@ ggplot(topcats, aes(x=reorder(Var1, Freq), y = Freq)) +
   geom_bar(stat = 'identity') +
   theme_bw() + 
   coord_flip()
+# You should probably look at what those categories mean!
 
 # Check unique geolocation points
 data$GEOcomb <- paste0(data$Longitude, ", ", data$Latitude)
@@ -128,6 +129,11 @@ nigMap <- ggmap(NIG.map) + geom_polygon(aes(x=long, y=lat, group=group),
 nigMap + geom_point(data = data, aes(x = Longitude, y = Latitude), 
                    color = "darkred", alpha = 0.8, size = 3) + 
   scale_colour_manual(values=c("blue","red"))
+# Density plot
+nigMap + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
+                         data = data, colour="Red") 
+# The density plot shows that there are a lot of 'generic' geolocations (i.e. standard geolocations from e.g. 'Osun state'.) Not necessarily problematic, but be aware.
+
 ## Some of these geolocations are at sea for some inexplicable reason. Let's see if we can select these. Also, ggmap deletes the points that fall from the map. We can look at this by simply plotting the geolocations in a scatterplot
 
 ggplot(data, aes(x=Longitude, y=Latitude)) +
@@ -154,7 +160,6 @@ data_outNaija <- data[which(data$Longitude >= 16 & data$Longitude >= 16),]
 data$CharLat <- sprintf("%f", data$Latitude)
 data$CharLong <- sprintf("%f", data$Longitude)
 
-
 ### Reverse code the Geolocations (i.e. input geolocations, get placenames)
 RevGeo <- function(latlong_combination){
   # Join Lat/Long values
@@ -172,14 +177,17 @@ RevGeo <- function(latlong_combination){
   close(con)
   #data.json <- unlist(data.json)
   # Extract country name
-  if(data.json["status"]=="OK")
+  if(data.json["status"]=="OK"){
     country <- data.json$results[[1]]$formatted_address
+  }else{
+    country <- ""
+  }
   # Return data
   return(country)
 }
 
 data_outNaija$locations <- unlist(lapply(data_outNaija$GEOcomb, RevGeo))
-# I don't have a direct explanation for why these guys would file complaints from Saudi Arabia and yemen etc. But this is definitely of interest for you!
+# I don't have a direct explanation for why these guys would file complaints from Saudi Arabia and yemen etc. But this is definitely of interest for you! Maybe these guys have anonimized their internet connection? ANyways, they are prime candidates for being removed IF it turns out that the geolocating process isn't as accurate as reclaimnaija professes.
          
 # There are few and dispersed reports after 2011 (prob local elections). Select for observations in 2011
 
