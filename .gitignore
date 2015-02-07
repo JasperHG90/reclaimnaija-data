@@ -1,3 +1,7 @@
-*.ipynb
+# Python
+python/*.ipynb
+python/.ipynb_checkpoints/*.ipynb
+
+# R stuff
 *.Rdata
 *.Rhistory

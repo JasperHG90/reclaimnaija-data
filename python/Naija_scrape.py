@@ -68,14 +68,14 @@ def naijaReport(url):
         lon = geo[0]
         lat = geo[1]
     except:
-        print('GEO: There occurred an error while extracting the geolocations for url {}. Check the log for issues . . . '.format(url))
+        print("GEO: There occurred an error while extracting the geolocations for url {}. This isn't absolutely necessary, and the rest of the data should still be collected!".format(url))
         lon = ""
         lat = ""
     try:
         # report
         text = ' '.join(soup.find('div',{'class':'report-description'}).find('div',{'class':'content'}).contents[0].split())
     except: 
-        print("COMPLAINT: There occurred an error while scraping the report for url {}. Please check the log for issues . . . ".format(url))
+        print("COMPLAINT: There occurred an error while scraping the report for url {}.".format(url))
         text = ""
     try:
         # Details
@@ -93,7 +93,7 @@ def naijaReport(url):
         Cat = ' '.join(det[3].find('a').text.split())
         scrapedate = datetime.date.today()
     except:
-        print 'DETAILS: There occurred an error while scraping the details for url {}. Please check the log for issues . . . '.format(url)
+        print 'DETAILS: There occurred an error while scraping the details for url {}.'.format(url)
         ver = ""
         tag = ""
         Loc = ""
@@ -282,15 +282,9 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
     log_level = 'info'
     # Start logging
     logger = logging.getLogger('NAIJA')
-    # Set levels
-    if log_level == 'info':
-        logger.setLevel(logging.INFO)
-    elif log_level == 'warning':
-        logger.setLevel(logging.WARNING)
-    elif log_level == 'error':
+    # Set level
+    if log_level == 'error':
         logger.setlevel(logging.ERROR)
-    elif log_level == 'debug':
-        logger.setlevel(logging.DEBUG)
     # Go
     if log_dir:
         fh = logging.FileHandler(log_dir, 'a')
@@ -298,7 +292,6 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
         fh = logging.FileHandler('backup.log', 'a')
     formatter = logging.Formatter('%(levelname)s; %(asctime)s; %(message)s')
     fh.setFormatter(formatter)
-
     logger.addHandler(fh)
     
     '''
@@ -310,9 +303,9 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
     if dbE == True and override == 'FALSE':
         naijadbSetup(dbname, tablename, path = path, override = override)
     else: 
+        print "Successfully set up the database in directory {} with name {}".format(path, dbname)
         # setup the database
         naijadbSetup(dbname, tablename, path = path, override = override)
-        print "Successfully set up the database in directory {} with name {}".format(path, dbname)
     
     '''
     Scraping
@@ -344,4 +337,4 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
 ++++ RUN MAIN ++++
 '''
 
-main(1, 200, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'FALSE')
+main(195, 884, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/data/', override = 'FALSE')
