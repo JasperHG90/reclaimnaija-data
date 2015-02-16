@@ -5,3 +5,6 @@ python/.ipynb_checkpoints/*.ipynb
 # R stuff
 *.Rdata
 *.Rhistory
+
+# Other
+/data/*.png

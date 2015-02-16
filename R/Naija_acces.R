@@ -1,11 +1,24 @@
-## MOJO JOJO! Please follow script to see how to retrieve Naija data
+'
+Rudimentary analyses of the data scraped from www.reclaimnaija.net
+
+Structure:
+ + Load packages
+ + Retrieve data from db
+ + Prep data
+ + Explore data
+
+Metadata:
+ + Written by : Jasper Ginn
+ + Date : 04-10-2014
+ + Last modified: 16-02-2015
+'
 
 ### Prep
 rm(list=ls())
 # Set wd
 setwd("/Users/Jasper/Documents/github.projects/reclaimnaija/data/")
 
-# Run line 8 and 9 twice IF you have to install packages. Otherwise, run it once to load packages
+# Run line 32 twice IF you have to install packages. Otherwise, run it once to load packages
 list.of.packages <- c("ggplot2",
                       "dplyr", 
                       "RSQLite", 
@@ -154,7 +167,7 @@ ggplot(data, aes(x=Longitude, y=Latitude)) +
 # Yes. this plot is a bit to show off, but it shows us that we can select all the geolocations that fall outside of the shaded area.
 data_outNaija <- data[which(data$Longitude >= 16 & data$Longitude >= 16),]
 
-# Ok  . . . so where are these places? Luckily, I wrote a function to look this up by geolocation the other day
+# Ok  . . . so where are these places? Luckily, I adapted a function from http://bit.ly/19nbvdK to look this up by geolocation some time ago. 
 
 # Convert Long/Lat to character format
 data$CharLat <- sprintf("%f", data$Latitude)
@@ -202,5 +215,3 @@ ggplot(dataOT, aes(x=Date, y=count)) +
   ylab("Number of Events")
 
 ## Is this good? Bad? I dunno, I'll leave that to you to decide.
-
-# Let me know if you need some help turning this into geolocated data.
