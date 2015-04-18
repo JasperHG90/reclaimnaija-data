@@ -1,6 +1,6 @@
 '''
 
-This script scrapes information about harrassment at the Nigerian 2011 & 2015 elections from www.reclamnaija.com 
+This script scrapes information about harrassment at the Nigerian 2011 elections from www.reclamnaija.com 
 Written by : Jasper Ginn & Johanna Renz
 Date : 25-01-2015
 Last modified : 07-02-2015
