@@ -340,4 +340,4 @@ def main(lower_range, upper_range, dbname, tablename, path = "~/desktop/", overr
 ++++ RUN MAIN ++++
 '''
 
-main(1,2995, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/Elections_2015/data/', override = 'FALSE')
+main(520,2995, 'NAIJA_sec', 'NAIJA_tab', path = '/users/jasper/documents/github.projects/reclaimnaija/Elections_2015/data/', override = 'FALSE')
