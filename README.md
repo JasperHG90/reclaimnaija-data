@@ -11,7 +11,6 @@ Find a sample of a filed report here: http://reclaimnaija.net/reports/view/7
 ## Folder structure
 
 	/Analysis:
-
 		* Naija_access.R 
 			- R script with several analyses of the 2011 & 2015 reclaimnaija data
 
