@@ -10,12 +10,12 @@ Find a sample of a filed report here: http://reclaimnaija.net/reports/view/7
 
 ## Folder structure
 
-/Analysis:
+	/Analysis:
 
-	* Naija_access.R 
+		* Naija_access.R 
 
-		- R script with several analyses of the 2011 & 2015 reclaimnaija data
-		
+			- R script with several analyses of the 2011 & 2015 reclaimnaija data
+
 /Elections_2011:
 	* /Data
 		* Naija_sec.db
