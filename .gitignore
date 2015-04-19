@@ -8,3 +8,4 @@ python/.ipynb_checkpoints/*.ipynb
 
 # Other
 /data/*.png
+*.png
