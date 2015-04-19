@@ -10,14 +10,16 @@ Structure:
 Metadata:
  + Written by : Jasper Ginn
  + Date : 04-10-2014
- + Last modified: 16-02-2015
+ + Last modified: 19-04-2015
 '
 
-### Prep
+# Prep ----
 rm(list=ls())
 # Set wd
-setwd("/Users/Jasper/Documents/github.projects/reclaimnaija/data/")
-
+setwd("/Users/Jasper/Documents/github.projects/reclaimnaija/")
+# Datasets for the 2011 & 2015 elections
+data.dir <- c(paste0(getwd(),"/Elections_2011/Data/NAIJA_sec.db"),
+              paste0(getwd(),"/Elections_2015/Data/NAIJA_sec.db"))
 # Run line 32 twice IF you have to install packages. Otherwise, run it once to load packages
 list.of.packages <- c("ggplot2",
                       "dplyr", 
@@ -31,58 +33,66 @@ list.of.packages <- c("ggplot2",
                       "data.table")
 for (package in list.of.packages) if(!require(package, character.only=TRUE)) install.package(package)
 
-# Connect to SQLite db! (make sure it is in your working directory)
-db<-dbConnect(SQLite(), dbname=paste("NAIJA_sec.db",
-                                     sep=""))
+# Take datasets for both elections
+dt <- lapply(data.dir, function(x){
+  # Connect to db
+  db <- dbConnect(SQLite(), dbname=x)
+  # Read Table
+  tab <- dbReadTable(db, "NAIJA_tab")
+  # Disconnect
+  dbDisconnect(db)
+  # Add identifier
+  if(grepl("Elections_2011", x) == TRUE){
+    tab$year <- "2011"
+  } else{
+    tab$year <- "2015"
+  }
+  # Return
+  return(tab)
+})
+# Reduce to one dataset
+data <- rbindlist(dt)
+rm(dt)
 
-#### READING DATA FROM DB
+# Process -----
 
-# Read complete dataset
-data <- dbReadTable(db, "NAIJA_tab")
-
-# Read only data from a certain period
-data <- dbSendQuery(db, "SELECT * FROM NAIJA WHERE Date = '2014-08-09'")
-# Fetch data
-data <- dbFetch(data)
-
-# Read only one specific variable
-data <- dbSendQuery(db, "SELECT Date FROM NAIJA")
-# Fetch data
-data <- dbFetch(data)
-
-# Close connection
-dbDisconnect(db)
-
-#### Prep
-
+# Check
 str(data)
+
+# The "Verified" column still has empty spaces in it. This is very annoying.
+trimWS <- function (x) gsub("^\\s+|\\s+$", "", x)
+data$Verified <- trimWS(data$Verified)
+
 # Transform data
 data$Date <- as.Date(ymd(data$Date))
 data$Scrapedate <- as.Date(ymd(data$Scrapedate))
 data$Verified <- as.factor(data$Verified)
 data$Category <- as.factor(data$Category)
-# check
-str(data)
-head(data)
+data$year <- as.factor(data$year)
 
-#### Plotting
+# Ok, do some plotting :-) -----
 
 # How many reports verified?
-ggplot(data, aes(x=Verified)) +
+p <- ggplot(data, aes(x=Verified)) +
   geom_bar() +
   theme_bw()
+p + facet_grid(. ~ year)
 # . . . ok, so very very little reports are actually verified
 summary(data$Verified)
 
 # Look at categories and visualize top ten
-topcats <- data.frame(table(data$Category)) %>%
+topcats2011 <- data.frame(table(data[data$year == "2011",]$Category)) %>%
   arrange(., desc(Freq))
-topcats <- topcats[1:10,]
-
-ggplot(topcats, aes(x=reorder(Var1, Freq), y = Freq)) +
+topcats2011 <- topcats2011[1:10,]
+topcats2015 <- data.frame(table(data[data$year == "2015",]$Category)) %>%
+  arrange(., desc(Freq))
+topcats2015 <- topcats2015[1:10,]
+# Plot
+p <- ggplot(topcats, aes(x=reorder(Var1, Freq), y = Freq)) +
   geom_bar(stat = 'identity') +
   theme_bw() + 
   coord_flip()
+p + facet_grid(., ~ year)
 # You should probably look at what those categories mean!
 
 # Check unique geolocation points
@@ -138,13 +148,22 @@ shpData <- fortify(shpData)
 # plot map + shapefile
 nigMap <- ggmap(NIG.map) + geom_polygon(aes(x=long, y=lat, group=group), 
                                       data=shpData, color ="blue", fill ="blue", alpha = .1, size = .3)
-# plot (map + shapefile) + datapoints
-nigMap + geom_point(data = data, aes(x = Longitude, y = Latitude), 
-                   color = "darkred", alpha = 0.8, size = 3) + 
-  scale_colour_manual(values=c("blue","red"))
+# plot (map + shapefile) + datapoints (2011)
+ch1 <- nigMap + geom_point(data = data[data$year == "2011",], aes(x = Longitude, y = Latitude), 
+                   color = "darkred", alpha = 0.8, size = 3) 
+# Add data for 2015
+ch1 + geom_point(data = data[data$year == "2015",], aes(x = Longitude, y = Latitude),
+             color = "darkgreen", alpha=0.8, size = 3) 
 # Density plot
-nigMap + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
-                         data = data, colour="Red") 
+ch2 <- nigMap + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
+                         data = data[data$year == "2011",], colour="Red") 
+# Add 2015
+ch2 + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
+                     data = data[data$year == "2015",], colour="Green")
+# Facet plot
+ch3 <- nigMap + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
+                               data = data, colour="Red")
+ch3 + facet_grid(. ~ year)
 # The density plot shows that there are a lot of 'generic' geolocations (i.e. standard geolocations from e.g. 'Osun state'.) Not necessarily problematic, but be aware.
 
 ## Some of these geolocations are at sea for some inexplicable reason. Let's see if we can select these. Also, ggmap deletes the points that fall from the map. We can look at this by simply plotting the geolocations in a scatterplot
