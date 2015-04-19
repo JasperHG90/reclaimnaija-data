@@ -1,11 +1,5 @@
 '
-Rudimentary analyses of the data scraped from www.reclaimnaija.net
-
-Structure:
- + Load packages
- + Retrieve data from db
- + Prep data
- + Explore data
+Rudimentary analyses of the reports on the 2011 & 2015 elections scraped from www.reclaimnaija.net
 
 Metadata:
  + Written by : Jasper Ginn
@@ -14,6 +8,7 @@ Metadata:
 '
 
 # Prep ----
+
 rm(list=ls())
 # Set wd
 setwd("/Users/Jasper/Documents/github.projects/reclaimnaija/")
@@ -59,9 +54,11 @@ rm(dt)
 # Check
 str(data)
 
-# The "Verified" column still has empty spaces in it. This is very annoying.
+# Trim trailing whitespace
 trimWS <- function (x) gsub("^\\s+|\\s+$", "", x)
 data$Verified <- trimWS(data$Verified)
+data$Category <- trimWS(data$Category)
+data$Report <- trimWS(data$Report)
 
 # Transform data
 data$Date <- as.Date(ymd(data$Date))
@@ -70,7 +67,18 @@ data$Verified <- as.factor(data$Verified)
 data$Category <- as.factor(data$Category)
 data$year <- as.factor(data$year)
 
-# Ok, do some plotting :-) -----
+# Check
+str(data)
+
+# EDA -----
+
+# Plot over time
+
+ggplot(dataOT, aes(x=Date, y=count)) + 
+  geom_line(size=2, alpha=0.8) + theme_bw() + geom_point(size=5) + 
+  theme(strip.background = element_rect(fill = 'white')) + 
+  xlab("Year") +
+  ylab("Number of Events") # Not pretty, but shows us that reports trickle in before and after elections. Bit nonsensical
 
 # How many reports verified?
 p <- ggplot(data, aes(x=Verified)) +
@@ -78,21 +86,32 @@ p <- ggplot(data, aes(x=Verified)) +
   theme_bw()
 p + facet_grid(. ~ year)
 # . . . ok, so very very little reports are actually verified
-summary(data$Verified)
+tapply(data$Verified, data$year, summary)
+# Look at reports that are neither verified nor unverified
+d2015 <- data[data$year == "2015",]
+d2015[d2015$Verified == "",] # These are actually all verified. SOmething must have gone when scraping the site >.<
 
 # Look at categories and visualize top ten
 topcats2011 <- data.frame(table(data[data$year == "2011",]$Category)) %>%
-  arrange(., desc(Freq))
+  arrange(., desc(Freq)) %>%
+  mutate(., year = "2011")
 topcats2011 <- topcats2011[1:10,]
 topcats2015 <- data.frame(table(data[data$year == "2015",]$Category)) %>%
-  arrange(., desc(Freq))
+  arrange(., desc(Freq)) %>%
+  mutate(., year="2015")
 topcats2015 <- topcats2015[1:10,]
+# Combine
+topcats <- rbind(topcats2011, topcats2015)
+# No caps
+topcats$Var1 <- tolower(topcats$Var1)
 # Plot
 p <- ggplot(topcats, aes(x=reorder(Var1, Freq), y = Freq)) +
   geom_bar(stat = 'identity') +
   theme_bw() + 
-  coord_flip()
-p + facet_grid(., ~ year)
+  coord_flip() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+p + facet_grid(. ~ year)
 # You should probably look at what those categories mean!
 
 # Check unique geolocation points
@@ -109,10 +128,10 @@ data$GEO_true <- ifelse(data$GEOcomb == "0, 0", 0, 1)
 dataOT <- data %>%
   group_by(Date) %>%
   summarize(count = n()) %>%
-  arrange(., desc(count))
+  arrange(., desc(count)) # The elections in 2011 were held on 16-04. In 2015 they were held on 28 & 29 March. However, not many reports actually came in on these dates. Perhaps they are only published after review.
 
 # Let's look at the day on which most reports came in
-data_mostfreq <- data[which(data$Date == '2011-04-02'),]
+data_mostfreq <- data[which(data$Date == '2015-04-11'),] 
 
 # create date + timestamp and plot for a daily overview
 data_mostfreq$DateTime <- paste0(data_mostfreq$Date, ' ', data_mostfreq$Time)
@@ -129,7 +148,7 @@ p <- qplot(data_mostfreq$DateTime) +
   theme(strip.background = element_rect(fill = 'white')) #+ 
   #ggtitle(paste("Scrape intensity on",datetoday,sep=" "))
 print(p)
-# . . . People seem to vote between most 7-8. Why then? Not quite sure. There is a peak before 9 AM, and a peak after five PM.
+# Hm. Doesn't really seem as a continuous flow.
 
 ### Rudimentary map of geolocations
 
@@ -146,7 +165,8 @@ shpData <- spTransform(shpData, CRS("+proj=longlat +datum=WGS84"))
 # Fortify shapefile so ggmap can read it
 shpData <- fortify(shpData)
 # plot map + shapefile
-nigMap <- ggmap(NIG.map) + geom_polygon(aes(x=long, y=lat, group=group), 
+nigMap <- ggmap(NIG.map, extent = "panel", maprange=FALSE) + 
+  geom_polygon(aes(x=long, y=lat, group=group), 
                                       data=shpData, color ="blue", fill ="blue", alpha = .1, size = .3)
 # plot (map + shapefile) + datapoints (2011)
 ch1 <- nigMap + geom_point(data = data[data$year == "2011",], aes(x = Longitude, y = Latitude), 
@@ -159,11 +179,18 @@ ch2 <- nigMap + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
                          data = data[data$year == "2011",], colour="Red") 
 # Add 2015
 ch2 + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
-                     data = data[data$year == "2015",], colour="Green")
+                     data = data[data$year == "2015",], colour="Green") # Overlapping areas, although 2015 is more comprehensive
 # Facet plot
-ch3 <- nigMap + geom_density2d(mapping=aes(x = Longitude, y = Latitude),
-                               data = data, colour="Red")
-ch3 + facet_grid(. ~ year)
+ch3 <- nigMap + 
+  geom_density2d(data = data, aes(x = Longitude, y = Latitude), colour="black") +
+  stat_density2d(data = data, aes(x = Longitude, y = Latitude,  fill = ..level.., alpha = ..level..),
+                 size = 0.01, bins = 20, geom = 'polygon') +
+  scale_fill_gradient(low = "green", high = "red") +
+  scale_alpha(range = c(0.00, 0.5), guide = FALSE) +
+  theme(legend.position = "none", 
+        axis.title = element_blank(), 
+        text = element_text(size = 12))
+ch3 + facet_grid(. ~ year) + ggtitle("Geographic Density of Reports Posted to www.reclaimnaija.net in 2011 and 2015")
 # The density plot shows that there are a lot of 'generic' geolocations (i.e. standard geolocations from e.g. 'Osun state'.) Not necessarily problematic, but be aware.
 
 ## Some of these geolocations are at sea for some inexplicable reason. Let's see if we can select these. Also, ggmap deletes the points that fall from the map. We can look at this by simply plotting the geolocations in a scatterplot
@@ -174,7 +201,7 @@ ggplot(data, aes(x=Longitude, y=Latitude)) +
 
 # Ya ok, so either people are sending in reports from abroad . . . or some fucky stuff is going on here. Let's kick out these foreign reports. They are not representative
 ggplot(data, aes(x=Longitude, y=Latitude)) +
-  geom_point() +
+  geom_point(colour = data$year) +
   scale_y_continuous(breaks=c(seq(from=0, to=62, by = 3))) +
   theme_bw() +
   geom_hline(yintercept=16, colour="red", size=2) +
@@ -224,14 +251,4 @@ data_outNaija$locations <- unlist(lapply(data_outNaija$GEOcomb, RevGeo))
 # There are few and dispersed reports after 2011 (prob local elections). Select for observations in 2011
 
 dataOT <- filter(dataOT, Date <= '2011-12-31')
-
-# Plot
-
-ggplot(dataOT, aes(x=Date, y=count)) + 
-  geom_line(size=2, alpha=0.8) + theme_bw() + geom_point(size=5) + 
-  theme(strip.background = element_rect(fill = 'white')) + 
-  xlab("Year") +
-  ylab("Number of Events")
-
-## Is this good? Bad? I dunno, I'll leave that to you to decide.
 

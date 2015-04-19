@@ -4,3 +4,4 @@ ERROR; 2015-04-18 22:19:35,171; DETAILS: There occurred an error while scraping 
 ERROR; 2015-04-19 08:47:07,351; INDEX: There was an error while extracting the urls for the individual pages from url http://reclaimnaija.net/reports/view/8518.
 ERROR; 2015-04-19 11:35:32,248; DETAILS: There occurred an error while scraping the details for url http://reclaimnaija.net/reports/view/11780.
 ERROR; 2015-04-19 11:36:43,444; INDEX: There was an error while extracting the urls for the individual pages from url http://reclaimnaija.net/reports/view/10207.
+ERROR; 2015-04-19 16:06:15,702; DETAILS: There occurred an error while scraping the details for url http://reclaimnaija.net/reports/view/11734.
