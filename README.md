@@ -14,24 +14,25 @@ Find a sample of a filed report here: http://reclaimnaija.net/reports/view/7
 		* Naija_access.R 
 			- R script with several analyses of the 2011 & 2015 reclaimnaija data
 
-/Elections_2011:
-	* /Data
-		* Naija_sec.db
-			- SQLite database that contains +- 8.000 reports filed to reclaimnaija about the 2011 Nigerian elections. (find a description of the variables below)
-	* /Python
-		* NAIJA.log
-			- Log file from the scraping process. 
-		* Naija_scrape.py
-			- Python script used to scrape the reports for the 2011 Nigerian elections.
-/Elections_2015
-	* /Data
-		* Naija_sec.db
-			- SQLite database that contains +- 15.000 reports filed to reclaimnaija about the 2015 Nigerian elections. (find a description of the variables below)
-	* /Python
-		* NAIJA.log
-			- Log file from the scraping process. 
-		* Naija_scrape.py
-			- Python script used to scrape the reports for the 2015 Nigerian elections.
+	/Elections_2011:
+		* /Data
+			* Naija_sec.db
+				- SQLite database that contains +- 8.000 reports filed to reclaimnaija about the 2011 Nigerian elections. (find a description of the variables below)
+		* /Python
+			* NAIJA.log
+				- Log file from the scraping process. 
+			* Naija_scrape.py
+				- Python script used to scrape the reports for the 2011 Nigerian elections.
+				
+	/Elections_2015
+		* /Data
+			* Naija_sec.db
+				- SQLite database that contains +- 15.000 reports filed to reclaimnaija about the 2015 Nigerian elections. (find a description of the variables below)
+		* /Python
+			* NAIJA.log
+				- Log file from the scraping process. 
+			* Naija_scrape.py
+				- Python script used to scrape the reports for the 2015 Nigerian elections.
 
 ## Variable description
 
