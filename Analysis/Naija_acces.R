@@ -15,7 +15,7 @@ setwd("/Users/Jasper/Documents/github.projects/reclaimnaija/")
 # Datasets for the 2011 & 2015 elections
 data.dir <- c(paste0(getwd(),"/Elections_2011/Data/NAIJA_sec.db"),
               paste0(getwd(),"/Elections_2015/Data/NAIJA_sec.db"))
-# Run line 32 twice IF you have to install packages. Otherwise, run it once to load packages
+# Run line 30 twice IF you have to install packages. Otherwise, run it once to load packages
 list.of.packages <- c("ggplot2",
                       "dplyr", 
                       "RSQLite", 
@@ -25,7 +25,8 @@ list.of.packages <- c("ggplot2",
                       "raster", 
                       "rgdal",
                       "RJSONIO",
-                      "data.table")
+                      "data.table",
+                      "XML")
 for (package in list.of.packages) if(!require(package, character.only=TRUE)) install.package(package)
 
 # Take datasets for both elections
@@ -71,6 +72,13 @@ data$year <- as.factor(data$year)
 str(data)
 
 # EDA -----
+
+# Let's plot reports over time, for funsies. I am using the %>% chaining command from the dplyr package. Very useful, you should look into it!
+
+dataOT <- data %>%
+  group_by(Date) %>%
+  summarize(count = n()) %>%
+  arrange(., desc(count)) # The elections in 2011 were held on 16-04. In 2015 they were held on 28 & 29 March. However, not many reports actually came in on these dates. Perhaps they are only published after review.
 
 # Plot over time
 
@@ -123,13 +131,6 @@ uniqGeo <- data %>%
 # There were +- 150 reports that could not be geolocated. Let's mark these with a 1 or 0 binary variable so we can easily take them out if necessary.
 data$GEO_true <- ifelse(data$GEOcomb == "0, 0", 0, 1)
 
-# Let's plot reports over time, for funsies. I am using the %>% chaining command from the dplyr package. Very useful, you should look into it!
-
-dataOT <- data %>%
-  group_by(Date) %>%
-  summarize(count = n()) %>%
-  arrange(., desc(count)) # The elections in 2011 were held on 16-04. In 2015 they were held on 28 & 29 March. However, not many reports actually came in on these dates. Perhaps they are only published after review.
-
 # Let's look at the day on which most reports came in
 data_mostfreq <- data[which(data$Date == '2015-04-11'),] 
 
@@ -160,6 +161,7 @@ NIG.map <- get_map(location = "Nigeria", maptype = "hybrid",
                   color = "bw", zoom = 6)
 # Download shapefile with administrative regions
 shpData <- getData('GADM', country='Nigeria', level=1)
+shpData$NAME_1
 # Transform to WGS84 coordinate system
 shpData <- spTransform(shpData, CRS("+proj=longlat +datum=WGS84"))
 # Fortify shapefile so ggmap can read it
@@ -192,6 +194,48 @@ ch3 <- nigMap +
         text = element_text(size = 12))
 ch3 + facet_grid(. ~ year) + ggtitle("Geographic Density of Reports Posted to www.reclaimnaija.net in 2011 and 2015")
 # The density plot shows that there are a lot of 'generic' geolocations (i.e. standard geolocations from e.g. 'Osun state'.) Not necessarily problematic, but be aware.
+
+# What is the population density by state? Get a quick table from wikipedia
+url <- "http://en.wikipedia.org/wiki/List_of_Nigerian_states_by_population"
+pop <- as.data.frame(readHTMLTable(url)[1])
+str(pop)
+colnames(pop) <- c("Rank", "State", "Population")
+pop$Rank <- as.numeric(pop$Rank)
+# Sub all commas in pop figures and make numeric
+pop$Population <- as.character(pop$Population)
+pop$Population <- as.numeric(gsub(",", "", pop$Population))
+# Sub all "State" in the state names
+pop$State <- gsub(" State", "", pop$State)
+# Lower
+pop$State <- tolower(pop$State)
+# load shapedata with admin regions
+nig.m.2 <- readOGR(dsn = paste0(getwd(), "/Analysis"), 
+                   layer = "NIR-level_1")
+states <- data.frame(statename = as.character(nig.m.2$ID),
+                       id = 1:40,
+                       stringsAsFactors=F)
+# Alter name
+states$statename[17] <- "Abuja Federal Capital Territory"
+states$statename[28] <- "Nasarawa"
+# Lower
+states$statename <- tolower(states$statename)
+# Merge
+statespop <- merge(states, pop, by.x="statename", by.y="State", all=TRUE)
+# Transform to WGS84 coordinate system
+shpData <- spTransform(shpData, CRS("+proj=longlat +datum=WGS84"))
+# Fortify shapefile so ggmap can read it
+nig.m.2$STATE <- as.character(nig.m.2$ID)
+nig.m.2$ID <- as.factor(1:40)
+shpData <- fortify(nig.m.2)
+shpData$id <- as.character(as.numeric(shpData$id) + 1)
+# Merge
+shpData.m <- merge(statespop, shpData, by.x="id", by.y="id")
+# plot map + shapefile
+ggmap(NIG.map, extent = "panel", maprange=FALSE) + 
+  geom_polygon(aes(x=long, y=lat, group=group), 
+               data=shpData, color ="black", fill ="blue", alpha=0.8,size=0.3)
+
+
 
 ## Some of these geolocations are at sea for some inexplicable reason. Let's see if we can select these. Also, ggmap deletes the points that fall from the map. We can look at this by simply plotting the geolocations in a scatterplot
 
