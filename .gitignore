@@ -8,7 +8,7 @@ python/.ipynb_checkpoints/*.ipynb
 
 # Other
 /data/*.png
-*.png
-*.grd
-*.gri
-*.vrt
+/*.png
+/*.grd
+/*.gri
+/*.vrt
