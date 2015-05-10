@@ -188,6 +188,7 @@ dbDisconnect(db)
 
 # Merge
 dataM <- merge(data, gld, by="geocomb", all=TRUE)
+summary(as.factor(dataM[which(dataM$country == "Nigeria"),]$state))
 
 # EDA -----
 
@@ -201,7 +202,9 @@ dataOT <- data %>%
 # Plot over time
 
 ggplot(dataOT, aes(x=Date, y=count)) + 
-  geom_line(size=2, alpha=0.8) + theme_bw() + geom_point(size=5) + 
+  geom_line(size=2, alpha=0.8) + 
+  theme_bw() + 
+  geom_point(size=5) + 
   theme(strip.background = element_rect(fill = 'white')) + 
   xlab("Year") +
   ylab("Number of Events") # Not pretty, but shows us that reports trickle in before and after elections. Bit nonsensical
@@ -215,7 +218,7 @@ p + facet_grid(. ~ year)
 tapply(data$Verified, data$year, summary)
 # Look at reports that are neither verified nor unverified
 d2015 <- data[data$year == "2015",]
-d2015[d2015$Verified == "",] # These are actually all verified. SOmething must have gone when scraping the site >.<
+ver<- d2015[d2015$Verified == "",] # These are actually all verified. 
 
 # Look at categories and visualize top ten
 topcats2011 <- data.frame(table(data[data$year == "2011",]$Category)) %>%
@@ -238,16 +241,6 @@ p <- ggplot(topcats, aes(x=reorder(Var1, Freq), y = Freq)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank())
 p + facet_grid(. ~ year)
-# You should probably look at what those categories mean!
-
-# Check unique geolocation points
-data$GEOcomb <- paste0(data$Longitude, ", ", data$Latitude)
-uniqGeo <- data %>%
-  group_by(GEOcomb) %>%
-  summarize(count=n()) %>%
-  arrange(., desc(count))
-# There were +- 150 reports that could not be geolocated. Let's mark these with a 1 or 0 binary variable so we can easily take them out if necessary.
-data$GEO_true <- ifelse(data$GEOcomb == "0, 0", 0, 1)
 
 # Let's look at the day on which most reports came in
 data_mostfreq <- data[which(data$Date == '2015-04-11'),] 
