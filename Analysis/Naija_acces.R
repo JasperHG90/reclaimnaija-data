@@ -1,10 +1,10 @@
 '
 Rudimentary analyses of the reports on the 2011 & 2015 elections scraped from www.reclaimnaija.net
 
-Metadata:
+Meta:
  + Written by : Jasper Ginn
  + Date : 04-10-2014
- + Last modified: 19-04-2015
+ + Last modified: 10-05-2015
 '
 
 # Prep ----
@@ -50,13 +50,17 @@ dt <- lapply(data.dir, function(x){
 data <- rbindlist(dt)
 rm(dt)
 
+# Helper functions ----
+
+# Trim whitespace
+trimWS <- function (x) gsub("^\\s+|\\s+$", "", x)
+
 # Process -----
 
 # Check
 str(data)
 
 # Trim trailing whitespace
-trimWS <- function (x) gsub("^\\s+|\\s+$", "", x)
 data$Verified <- trimWS(data$Verified)
 data$Category <- trimWS(data$Category)
 data$Report <- trimWS(data$Report)
@@ -70,6 +74,120 @@ data$year <- as.factor(data$year)
 
 # Check
 str(data)
+
+# Augment -----
+
+"
+I used this function once to reverse geolocate the final data. I then saved the entire dataset to disk. You can uncomment it to re-run the analysis if you want.
+"
+
+"
+# Reverse code the Geolocations (i.e. input geolocations, get placenames). I adapted a function from http://bit.ly/19nbvdK to do this.
+
+# In case you want to use the google API, visit: https://console.developers.google.com/project to create one.
+
+# Combine geolocations and take unique ones
+data$geocomb <- paste0(data$Latitude,",",data$Longitude)
+
+# Function to reverse geolocate
+RevGeo <- function(geocomb, useAPI = c(TRUE, FALSE), API){
+  # Convert to URL
+  if(useAPI == FALSE) {
+    connectStr <- paste('http://maps.google.com/maps/api/geocode/json?sensor=false&latlng=',
+                        geocomb,sep="")
+    # Open connection
+    con <- url(connectStr)
+    # Load JSON data
+    data.json <- fromJSON(paste(readLines(con), collapse=""))
+    # Close connection
+    close(con)
+  } else{
+    # Load RCurl
+    ifelse(!require(RCurl), install.packages("RCurl"), require(RCurl))
+    # Construct URL call
+    connectStr <- paste('https://maps.googleapis.com/maps/api/geocode/json?sensor=false&latlng=',
+                        geocomb,
+                        "&key=", 
+                        API,
+                        sep="")
+    # Open connection
+    con <- getURL(connectStr)
+    # Load JSON data
+    data.json <- fromJSON(con)
+  }
+  # Extract country name
+  if(data.json["status"]=="OK"){
+    print(geocomb)
+    # If length of data.json$results == 1, then we have the 'general' geolocations of a country
+    if(length(data.json$results) == 1){
+      state <- ""
+      country <- data.json$results[[1]]$formatted_address
+      # Return data
+      return(
+        data.frame(
+          state = state,
+          country = country,
+          stringsAsFactors=F)
+      )
+    }
+    # If length == 3 then there is a street name. If length < 3 there is no street name
+    if(length(data.json$results[[2]]$address_components) == 3){
+      state <- data.json$results[[2]]$address_components[[2]]$long_name
+      country <- data.json$results[[2]]$address_components[[3]]$long_name
+    }
+    if(length(data.json$results[[2]]$address_components) == 2){
+      state <- data.json$results[[2]]$address_components[[1]]$long_name
+      country <- data.json$results[[2]]$address_components[[2]]$long_name
+    }
+    # If Length == 4 then the data is queried with the private API
+    if(length(data.json$results[[2]]$address_components) == 4){
+      state <- data.json$results[[2]]$address_components[[3]]$long_name
+      country <- data.json$results[[2]]$address_components[[4]]$long_name
+    }
+  }#else{
+    #state <- ""
+    #country <- ""
+  #}
+  # Return data
+  return(
+    data.frame(
+              state = state,
+              country = country,
+              geocomb = geocomb,
+              stringsAsFactors=F)
+    )
+}
+
+# Geolocate all unique observations
+res <- lapply(ungc, function(x){
+  # RevGeo
+  return(RevGeo(x, useAPI = TRUE, API = "Insert-api-here"))
+})
+# Bind into data frame
+bind <- rbindlist(res, fill=TRUE)
+
+# Turn into factor
+bind$country <- as.factor(bind$country)
+bind$state <- as.factor(bind$state)
+summary(bind)
+
+# Add dataset to SQLite database
+dir <- paste0(getwd(), "/ref/reverse_Geolocate.sqlite")
+db <- dbConnect(SQLite(), dir)
+dbWriteTable(db, "REVERSE_GEOLOCATIONS", bind)
+dbListTables(db)
+#Test
+t <- dbReadTable(db, "REVERSE_GEOLOCATIONS") # Success!
+"
+
+# Merge with original data
+dir <- paste0(getwd(), "/ref/reverse_Geolocate.sqlite")
+db <- dbConnect(SQLite(), dir)
+gld <- dbReadTable(db, "REVERSE_GEOLOCATIONS")
+dbDisconnect(db)
+
+# Merge
+dataM <- merge(data, gld, by="geocomb", all=TRUE)
 
 # EDA -----
 
@@ -197,8 +315,7 @@ ch3 + facet_grid(. ~ year) + ggtitle("Geographic Density of Reports Posted to ww
 
 # What is the population density by state? Get a quick table from wikipedia
 url <- "http://en.wikipedia.org/wiki/List_of_Nigerian_states_by_population"
-pop <- as.data.frame(readHTMLTable(url)[1])
-str(pop)
+pop <- as.data.frame(readHTMLTable(url)[2])
 colnames(pop) <- c("Rank", "State", "Population")
 pop$Rank <- as.numeric(pop$Rank)
 # Sub all commas in pop figures and make numeric
@@ -257,18 +374,37 @@ ggplot(data, aes(x=Longitude, y=Latitude)) +
 # Yes. this plot is a bit to show off, but it shows us that we can select all the geolocations that fall outside of the shaded area.
 data_outNaija <- data[which(data$Longitude >= 16 & data$Longitude >= 16),]
 
-# Ok  . . . so where are these places? Luckily, I adapted a function from http://bit.ly/19nbvdK to look this up by geolocation some time ago. 
+# Ok  . . . so where are these places? Luckily, 
 
 # Convert Long/Lat to character format
-data$CharLat <- sprintf("%f", data$Latitude)
-data$CharLong <- sprintf("%f", data$Longitude)
+data.json <- toJSON(data.json)
+write(data.json, "/users/jasper/desktop/test.json", append=TRUE)
+
+cat(toJSON(data.json), file = "/users/jasper/desktop/test.json")
+
+t <- file("/users/jasper/desktop/test.json")
+data <- fromJSON(sprintf("[%s]", paste(readLines(t),collapse=",")))
+g <- fromJSON(t)
+close(t)
+g[[1]]
+data.json$status <- NULL
+data.json
+data.json[[1]][5]
+
+tz <- toJSON(data.json[[1]][[1]]$address_components)
+write(tz, "/users/jasper/desktop/test.json", append=TRUE)
+
+l <- readLines(t)
+j <- lapply(l, fromJSON)
 
 ### Reverse code the Geolocations (i.e. input geolocations, get placenames)
-RevGeo <- function(latlong_combination){
+RevGeo <- function(latitude, longitude){
+  latitude <- data$Latitude[1]
+  longitude <- data$Longitude[1]
+  ll <- c(latitude,longitude)
   # Join Lat/Long values
-  latlng <- latlong_combination
   # Paste 
-  latlngStr <-  gsub(' ','%20', paste(latlng, collapse=","))
+  latlngStr <-  paste0(ll, collapse=",")
   # Convert to URL
   connectStr <- paste('http://maps.google.com/maps/api/geocode/json?sensor=false&latlng=',
                       latlngStr, sep="")
